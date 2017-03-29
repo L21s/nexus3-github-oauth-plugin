@@ -1,0 +1,117 @@
+package com.larscheidschmitzhermes.nexus3.github.oauth.plugin;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubApiClient;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubOrg;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubTeam;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubUser;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.MockGithubOauthConfiguration;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.core.Is;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@RunWith(MockitoJUnitRunner.class)
+public class GithubApiClientTest {
+    private MockGithubOauthConfiguration config = new MockGithubOauthConfiguration();
+    private ObjectMapper mapper = new ObjectMapper();
+
+    private List<GithubOrg> mockOrgs(){
+        List<GithubOrg> orgs = new ArrayList<>();
+        GithubOrg org = new GithubOrg();
+        org.setLogin("TEST-ORG");
+        org.setUrl("www.example.com/test-org");
+        orgs.add(org);
+        return orgs;
+    }
+
+    private List<GithubTeam> mockTeams(){
+        List<GithubTeam> teams = new ArrayList<>();
+        GithubTeam team = new GithubTeam();
+        team.setName("admin");
+        teams.add(team);
+        return teams;
+    }
+
+    private GithubUser mockUser(){
+        GithubUser user = new GithubUser();
+        user.setName("Hans Wurst");
+        user.setLogin("demo-user");
+        return user;
+    }
+
+    private HttpResponse createMockResponse(Object entity) throws IOException {
+        HttpResponse mockOrgRespone = Mockito.mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
+        Mockito.when(mockOrgRespone.getStatusLine().getStatusCode()).thenReturn(200);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        mapper.writeValue(baos, entity);
+        byte[] data = baos.toByteArray();
+        Mockito.when(mockOrgRespone.getEntity().getContent()).thenReturn(new ByteArrayInputStream(data));
+        return mockOrgRespone;
+    }
+
+    private HttpClient fullyFunctionalMockClient() throws IOException{
+        HttpClient mockClient = Mockito.mock(HttpClient.class);
+        HttpResponse mockOrgRespone = createMockResponse(mockOrgs());
+        HttpResponse mockTeamResponse = createMockResponse(mockTeams());
+        HttpResponse mockUserResponse = createMockResponse(mockUser());
+
+        Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> {
+            String uriString = ((HttpGet) invocationOnMock.getArguments()[0]).getURI().toString();
+            if (uriString.equals(config.getGithubOrgsUri().toString())){
+                return mockOrgRespone;
+            }else if(uriString.matches(".*/teams.*")){
+                return mockTeamResponse;
+            }else if(uriString.equals(config.getGithubUserUri().toString())){
+                return mockUserResponse;
+            }
+            return null;
+        });
+        return mockClient;
+    }
+
+    @Test
+    public void shouldDoAuthzIfRequestStatusIs200() throws Exception {
+        HttpClient mockClient = fullyFunctionalMockClient();
+
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
+
+        MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
+        MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
+        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("Hans Wurst"));
+
+    }
+
+    @Test(expected = GithubAuthenticationException.class)
+    public void shouldNotAuthenticateIfRequestIsNot200() throws Exception {
+        HttpClient mockClient = Mockito.mock(HttpClient.class);
+        HttpResponse mockRespone = Mockito.mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
+        Mockito.when(mockRespone.getStatusLine().getStatusCode()).thenReturn(403);
+        Mockito.when(mockClient.execute(Mockito.any())).thenReturn(mockRespone);
+
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, new MockGithubOauthConfiguration());
+
+        clientToTest.authz("demo-user", "DUMMY".toCharArray());
+    }
+
+    @Test(expected = GithubAuthenticationException.class)
+    public void shouldNotAuthenticateIfUsernameDoesntMatch() throws Exception {
+        HttpClient mockClient = fullyFunctionalMockClient();
+
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal authorizedPrincipal = clientToTest.authz("not-the-demo-user", "DUMMY".toCharArray());
+    }
+
+}
