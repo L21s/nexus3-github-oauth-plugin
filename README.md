@@ -1,4 +1,4 @@
-#Nexus3 Github OAuth Plugin
+# Nexus3 Github OAuth Plugin
 This plugin adds a Github realm to Sonatype Nexus OSS and enables you to authenticate with Github Users and authorize with Github Orgs and Teams.
 
 The plugin does not implement a full OAuth flow, instead you use your github user name + an OAuth token you generated in your account to log in to the nexus. 
