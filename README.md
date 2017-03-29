@@ -51,17 +51,20 @@ The file has to contain the following property:
 github.api.url=https://github.example.com/api/v3 #note: no trailing slash!!!
 ```
 
+#### 5. Restart Nexus
+Restart your Nexus instance to let it pick up your changes.
+
 ## Setup
 
 #### 1. Activate the Realm
-Log in to your nexus and go to _Administration > Security > Realms_. Move the Github Realm to the right.
+Log in to your nexus and go to _Administration > Security > Realms_. Move the Github Realm to the right. The realm order in the form determines the order of the realms in your authentication flow. We recommend putting Github _after_ the built-in realms.
 
 #### 2. Group / Roles Mapping
 When logged in through Github, all organizations and teams the user is a member of will be mapped into roles like so:
 
 _organization name/team name_ e.g. `dummy-org/developers`
 
-You need to manually create these roles in _Administration > Security > Roles_ in order to assign them the desired priviliges.
+You need to manually create these roles in _Administration > Security > Roles_ in order to assign them the desired priviliges. Note that anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any priviledges assigned with their teams (authorization).
 
 ## Usage
 
