@@ -1,10 +1,18 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -13,17 +21,11 @@ import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
 
 @Singleton
 @Named("GithubApiClient")
@@ -86,7 +88,7 @@ public class GithubApiClient {
         }
 
         GithubPrincipal user = new GithubPrincipal();
-        user.setUsername(githubUser.getName());
+        user.setUsername(githubUser.getName() != null ? githubUser.getName() : login);
 
         HttpGet orgsRequest = new HttpGet(configuration.getGithubOrgsUri());
         orgsRequest.addHeader(tokenHeader);
