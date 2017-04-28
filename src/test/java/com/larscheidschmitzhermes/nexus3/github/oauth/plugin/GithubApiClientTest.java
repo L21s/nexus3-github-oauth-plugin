@@ -1,11 +1,11 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubApiClient;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubOrg;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubTeam;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubUser;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.MockGithubOauthConfiguration;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -16,11 +16,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubApiClient;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubOrg;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubTeam;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubUser;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.MockGithubOauthConfiguration;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GithubApiClientTest {
@@ -44,9 +45,9 @@ public class GithubApiClientTest {
         return teams;
     }
 
-    private GithubUser mockUser(){
+    private GithubUser mockUser(String username){
         GithubUser user = new GithubUser();
-        user.setName("Hans Wurst");
+        user.setName(username);
         user.setLogin("demo-user");
         return user;
     }
@@ -65,7 +66,27 @@ public class GithubApiClientTest {
         HttpClient mockClient = Mockito.mock(HttpClient.class);
         HttpResponse mockOrgRespone = createMockResponse(mockOrgs());
         HttpResponse mockTeamResponse = createMockResponse(mockTeams());
-        HttpResponse mockUserResponse = createMockResponse(mockUser());
+        HttpResponse mockUserResponse = createMockResponse(mockUser("Hans Wurst"));
+
+        Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> {
+            String uriString = ((HttpGet) invocationOnMock.getArguments()[0]).getURI().toString();
+            if (uriString.equals(config.getGithubOrgsUri().toString())){
+                return mockOrgRespone;
+            }else if(uriString.matches(".*/teams.*")){
+                return mockTeamResponse;
+            }else if(uriString.equals(config.getGithubUserUri().toString())){
+                return mockUserResponse;
+            }
+            return null;
+        });
+        return mockClient;
+    }
+
+    private HttpClient mockClientWithNullUsername()throws IOException{
+        HttpClient mockClient = Mockito.mock(HttpClient.class);
+        HttpResponse mockOrgRespone = createMockResponse(mockOrgs());
+        HttpResponse mockTeamResponse = createMockResponse(mockTeams());
+        HttpResponse mockUserResponse = createMockResponse(mockUser(null));
 
         Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> {
             String uriString = ((HttpGet) invocationOnMock.getArguments()[0]).getURI().toString();
@@ -104,6 +125,18 @@ public class GithubApiClientTest {
         GithubApiClient clientToTest = new GithubApiClient(mockClient, new MockGithubOauthConfiguration());
 
         clientToTest.authz("demo-user", "DUMMY".toCharArray());
+    }
+
+    @Test()
+    public void shouldFallbackToLoginNameIfUsernameNotSetInGit() throws Exception {
+        HttpClient mockClient = mockClientWithNullUsername();
+
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
+
+        MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
+        MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
+        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
     }
 
     @Test(expected = GithubAuthenticationException.class)
