@@ -36,7 +36,7 @@ cp -ra ~/.m2/repository/com/larscheidschmitzhermes $install-dir/system/com
 ```
 
 #### 3. Add bundle to startup properties
-Append the following line to `$install-dir/etc/karafstartup.properties` 
+Append the following line to `$install-dir/etc/karaf/startup.properties` 
 
 Please replace _[PLUGIN_VERSION]_ by the current plugin version.
 ```
