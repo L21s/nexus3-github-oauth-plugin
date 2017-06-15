@@ -27,7 +27,7 @@ See [https://books.sonatype.com/nexus-book/reference3/install.html#directories](
 Build and install the into your local maven repository using the following commands:
 
 ```
-mvn install
+./mvnw install
 ```
 
 #### 2. Copy all needed jars into nexus system folder
