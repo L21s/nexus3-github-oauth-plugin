@@ -52,6 +52,12 @@ The file has to contain the following property:
 github.api.url=https://github.example.com/api/v3 #note: no trailing slash!!!
 ```
 
+You can optionally provide the property `github.principal.cache.ttl` and set it
+to a java.time.Duration string to configure how long a given Github access
+token will be cached for. The default duration is 1 minute and is a tradeoff of
+how quickly access can be revoked and how quickly a Github user's rate limit
+will be reached for the Github User API.
+
 #### 5. Restart Nexus
 Restart your Nexus instance to let it pick up your changes.
 
