@@ -43,20 +43,21 @@ Please replace _[PLUGIN_VERSION]_ by the current plugin version.
 mvn\:com.larscheidschmitzhermes/nexus3-github-oauth-plugin/[PLUGIN_VERSION] = 200
 ```
 
-#### 4. Create githuboauth.properties
-Create a `$install-dir/etc/githuboauth.properties`
+#### 4. Create configuration within `githuboauth.properties` file
+Create `$install-dir/etc/githuboauth.properties`
 
-The file has to contain the following property:
+Within the file you can configure the following properties:
 
+|Property        |Description                              |Default|
+|---             |---                                      |---    |
+|`github.api.url`|URL of the Github API to operate against. Default is Github Public, you will only need this if you use Github Enterprise.|`https://github.example.com/api/v3` |
+|`github.principal.cache.ttl`|[Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-) for how long a given Access will be cached for. This is a tradeoff of how quickly access can be revoked and how quickly a Github user's rate limit will be reached for the Github User API. Note: Github Enterprise does not have a rate limit!|`PT1M` (1 Minute)|
+
+This is what an example file would look like:
 ```properties
 github.api.url=https://github.example.com/api/v3 #note: no trailing slash!!!
+github.principal.cache.ttl=PT1M
 ```
-
-You can optionally provide the property `github.principal.cache.ttl` and set it
-to a java.time.Duration string to configure how long a given Github access
-token will be cached for. The default duration is 1 minute and is a tradeoff of
-how quickly access can be revoked and how quickly a Github user's rate limit
-will be reached for the Github User API.
 
 #### 5. Restart Nexus
 Restart your Nexus instance to let it pick up your changes.
