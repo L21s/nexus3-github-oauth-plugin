@@ -93,7 +93,7 @@ public class GithubApiClient {
         GithubPrincipal principal = new GithubPrincipal();
 
         principal.setUsername(githubUser.getName() != null ? githubUser.getName() : loginName);
-        principal.setRoles(generateRolesFromGithubOrgMemberships(githubUser, token));
+        principal.setRoles(generateRolesFromGithubOrgMemberships(token));
 
         return principal;
     }
@@ -123,7 +123,7 @@ public class GithubApiClient {
         }
     }
 
-    private Set<String> generateRolesFromGithubOrgMemberships(GithubUser githubUser, char[] token) throws GithubAuthenticationException{
+    private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException{
         HttpGet orgsRequest = new HttpGet(configuration.getGithubOrgsUri());
         orgsRequest.addHeader(constructGithubAuthorizationHeader(token));
         HttpResponse orgsResponse;
