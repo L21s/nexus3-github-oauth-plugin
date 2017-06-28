@@ -1,18 +1,12 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -21,11 +15,18 @@ import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 @Named("GithubApiClient")
@@ -35,6 +36,8 @@ public class GithubApiClient {
     HttpClient client;
     GithubOauthConfiguration configuration;
     ObjectMapper mapper;
+    // Cache token lookups to reduce the load on Github's User API to prevent hitting the rate limit.
+    private Cache<String, GithubPrincipal> tokenToPrincipalCache;
 
     public GithubApiClient() {
         //no args constructor is needed
@@ -44,12 +47,20 @@ public class GithubApiClient {
         this.client = client;
         this.configuration = configuration;
         mapper = new ObjectMapper();
+        initPrincipalCache();
     }
 
     @PostConstruct
     public void init() {
         client = HttpClientBuilder.create().build();
         mapper = new ObjectMapper();
+        initPrincipalCache();
+    }
+
+    private void initPrincipalCache() {
+        tokenToPrincipalCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(configuration.getPrincipalCacheTtl().toMillis(), TimeUnit.MILLISECONDS)
+                .build();
     }
 
     @Inject
@@ -58,6 +69,22 @@ public class GithubApiClient {
     }
 
     public GithubPrincipal authz(String login, char[] token) throws GithubAuthenticationException {
+        // Combine the login and the token as the cache key since they are both used to generate the principal. If either changes we should obtain a new
+        // principal.
+        String cacheKey = login + "|" + new String(token);
+        GithubPrincipal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
+        if (cached != null) {
+            LOGGER.debug("Using cached principal for login: {}", login);
+            return cached;
+        } else {
+            GithubPrincipal principal = doAuthz(login, token);
+            tokenToPrincipalCache.put(cacheKey, principal);
+            return principal;
+        }
+    }
+
+    private GithubPrincipal doAuthz(String login, char[] token) throws GithubAuthenticationException {
+
         BasicHeader tokenHeader = new BasicHeader("Authorization", "token " + new String(token));
         HttpGet userRequest = new HttpGet(configuration.getGithubUserUri());
         userRequest.addHeader(tokenHeader);

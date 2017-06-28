@@ -9,6 +9,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Properties;
 
 @Singleton
@@ -21,6 +22,8 @@ public class GithubOauthConfiguration {
     private static final String GITHUB_ORGS_PATH = "/user/orgs";
 
     private static final String GITHUB_TEAMS_IN_ORG_PATH = "/teams";
+
+    private static final Duration DEFAULT_PRINCIPAL_CACHE_TTL = Duration.ofMinutes(1);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GithubOauthConfiguration.class);
 
@@ -52,5 +55,14 @@ public class GithubOauthConfiguration {
 
     public String getGithubUserUri() {
         return getGithubApiUrl() + GITHUB_USER_PATH;
+    }
+
+    public Duration getPrincipalCacheTtl() {
+        String override = configuration.getProperty("github.principal.cache.ttl");
+        if (override != null) {
+            return Duration.parse(override);
+        } else {
+            return DEFAULT_PRINCIPAL_CACHE_TTL;
+        }
     }
 }
