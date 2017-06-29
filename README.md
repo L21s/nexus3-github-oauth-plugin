@@ -4,7 +4,34 @@
 This plugin adds a Github realm to Sonatype Nexus OSS and enables you to authenticate with Github Users and authorize with Github Orgs and Teams.
 
 The plugin does not implement a full OAuth flow, instead you use your github user name + an OAuth token you generated in your account to log in to the nexus. 
-This works through the web as well as through tools like maven, gradle...
+This works through the web as well as through tools like maven, gradle etc.
+
+## Setup
+
+#### 1. Activate the Realm
+Log in to your nexus and go to _Administration > Security > Realms_. Move the Github Realm to the right. The realm order in the form determines the order of the realms in your authentication flow. We recommend putting Github _after_ the built-in realms:
+![setup](setup.png)
+
+#### 2. Group / Roles Mapping
+When logged in through Github, all organizations and teams the user is a member of will be mapped into roles like so:
+
+_organization name/team name_ e.g. `dummy-org/developers`
+
+You need to manually create these roles in _Administration > Security > Roles > (+) Create Role > Nexus Role_ in order to assign them the desired priviliges. Note that anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any priviledges assigned with their teams (authorization).
+
+![role-mapping](role-mapping.png)
+
+## Usage
+
+The following steps need to be done by every developer who wants to login to your nexus with Github.
+#### 1. Generate OAuth Token
+ 
+In your github account under _Settings > Personal access tokens_ generate a new OAuth token. The only scope you need is **read:org** 
+
+#### 2. Login to nexus
+
+When logging in to nexus, use your github user name as the username and the oauth token you just generated as the password.
+This also works through maven, gradle etc.
 
 ## Installation
 
@@ -62,30 +89,6 @@ github.principal.cache.ttl=PT1M
 
 #### 5. Restart Nexus
 Restart your Nexus instance to let it pick up your changes.
-
-## Setup
-
-#### 1. Activate the Realm
-Log in to your nexus and go to _Administration > Security > Realms_. Move the Github Realm to the right. The realm order in the form determines the order of the realms in your authentication flow. We recommend putting Github _after_ the built-in realms.
-
-#### 2. Group / Roles Mapping
-When logged in through Github, all organizations and teams the user is a member of will be mapped into roles like so:
-
-_organization name/team name_ e.g. `dummy-org/developers`
-
-You need to manually create these roles in _Administration > Security > Roles_ in order to assign them the desired priviliges. Note that anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any priviledges assigned with their teams (authorization).
-
-## Usage
-
-The following steps need to be done by every developer who wants to login to your nexus with Github.
-#### 1. Generate OAuth Token
- 
-In your github account under _Settings > Personal access tokens_ generate a new OAuth token. The only scope you need is **read:org** 
-
-#### 2. Login to nexus
-
-When logging in to nexus, use your github user name as the username and the oauth token you just generated as the password.
-This also works through maven, gradle etc.
 
 ## Credits
 
