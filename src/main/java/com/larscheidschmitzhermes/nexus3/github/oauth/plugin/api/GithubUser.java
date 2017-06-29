@@ -15,6 +15,10 @@ public class GithubUser {
         this.login = login;
     }
 
+    /**
+     *
+     * @return the real world name of the github user, null if not specified in github
+     */
     public String getName() {
         return name;
     }
