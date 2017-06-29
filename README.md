@@ -49,10 +49,10 @@ Create `$install-dir/etc/githuboauth.properties`
 
 Within the file you can configure the following properties:
 
-|Property        |Description                              |Default|
+|Property        |Description                              |[Default](https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/blob/master/src/main/java/com/larscheidschmitzhermes/nexus3/github/oauth/plugin/configuration/GithubOauthConfiguration.java)|
 |---             |---                                      |---    |
-|`github.api.url`|URL of the Github API to operate against.|*none* |
-|`github.principal.cache.ttl`|[Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-) for how long a given Access will be cached for. This is a tradeoff of how quickly access can be revoked and how quickly a Github user's rate limit will be reached for the Github User API. Note: Github Enterprise does not have a rate limit!|`PT1M` (1 Minute)|
+|`github.api.url`|URL of the Github API to operate against.|`https://api.github.com`|
+|`github.principal.cache.ttl`|[Java Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-) for how long a given Access will be cached for. This is a tradeoff of how quickly access can be revoked and how quickly a Github user's rate limit will be reached for the Github User API. _Note:_ Github Enterprise does not have a rate limit!|`PT1M` (1 Minute)|
 
 This is what an example file would look like:
 ```properties
