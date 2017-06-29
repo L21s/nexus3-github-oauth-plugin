@@ -7,10 +7,6 @@ public class GithubPrincipal {
     private char[] oauthToken;
     private Set<String> roles;
 
-    public GithubPrincipal(){
-
-    }
-
     public void setUsername(String username) {
         this.username = username;
     }
