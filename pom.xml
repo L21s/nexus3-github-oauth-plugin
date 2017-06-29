@@ -20,7 +20,7 @@
 
     <groupId>com.larscheidschmitzhermes</groupId>
     <artifactId>nexus3-github-oauth-plugin</artifactId>
-    <version>3.2.2-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <packaging>bundle</packaging>
