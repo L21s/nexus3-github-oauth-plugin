@@ -36,43 +36,26 @@ This also works through maven, gradle etc.
 ## Installation
 
 #### 0. Prerequisites
-* JDK 8 is installed
-* Apache Maven is installed
-* Sonatype Nexus OSS 3.2.x is installed 
 
 ##### Directory naming convention:
-When Nexus gets downloaded and unzipped, there are typically two directories created:
-* nexus-3.2.1-01
-* sonatype-work/nexus3
+For the following commands we assume your nexus installation resides in `/opt/sonatype/nexus`. See [https://books.sonatype.com/nexus-book/reference3/install.html#directories](https://books.sonatype.com/nexus-book/reference3/install.html#directories) for reference.
 
-To avoid confusion, the conventions of the Sonatype reference will be used in the following descriptions:
-* nexus-3.2.1-01 will be referred to as **$install-dir**
-* sonatype-work/nexus3 will be referred to as **$data-dir**
+#### 1. Download and install
 
-See [https://books.sonatype.com/nexus-book/reference3/install.html#directories](https://books.sonatype.com/nexus-book/reference3/install.html#directories) for reference.
-
-#### 1. Build the plugin
-Build and install the into your local maven repository using the following commands:
-
-```
-./mvnw install
-```
-
-#### 2. Copy all needed jars into nexus system folder
-```
-cp -ra ~/.m2/repository/com/larscheidschmitzhermes $install-dir/system/com
+The following lines will:
+- create a directory in the `nexus` / `kafka` maven repository
+- download the latest release from github
+- unzip the releae to the maven repository
+- add the plugin to the `karaf` `startup.properties`.
+```shell
+mkdir -p /opt/sonatype/nexus/system/com/larscheidschmitzhermes/ &&\
+wget -O /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/1.0.0/nexus3-github-oauth-plugin.zip &&\
+unzip /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip -d /opt/sonatype/nexus/system/com/larscheidschmitzhermes/ &&\
+echo "mvn\:com.larscheidschmitzhermes/nexus3-github-oauth-plugin/1.0.0 = 200" >> /opt/sonatype/nexus/etc/karaf/startup.properties
 ```
 
-#### 3. Add bundle to startup properties
-Append the following line to `$install-dir/etc/karaf/startup.properties` 
-
-Please replace _[PLUGIN_VERSION]_ by the current plugin version.
-```
-mvn\:com.larscheidschmitzhermes/nexus3-github-oauth-plugin/[PLUGIN_VERSION] = 200
-```
-
-#### 4. Create configuration within `githuboauth.properties` file
-Create `$install-dir/etc/githuboauth.properties`
+#### 2. Create configuration
+Create `/opt/sonatype/nexus/etc/githuboauth.properties`
 
 Within the file you can configure the following properties:
 
@@ -87,7 +70,7 @@ github.api.url=https://github.example.com/api/v3 #note: no trailing slash!!!
 github.principal.cache.ttl=PT1M
 ```
 
-#### 5. Restart Nexus
+#### 3. Restart Nexus
 Restart your Nexus instance to let it pick up your changes.
 
 ## Credits
