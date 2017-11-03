@@ -2,10 +2,6 @@ package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -124,51 +120,25 @@ public class GithubApiClient {
     }
 
     private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException{
-        HttpGet orgsRequest = new HttpGet(configuration.getGithubOrgsUri());
-        orgsRequest.addHeader(constructGithubAuthorizationHeader(token));
-        HttpResponse orgsResponse;
-
-        Set<GithubOrg> orgs;
-        try {
-            orgsResponse = client.execute(orgsRequest);
-             orgs = mapper.readValue(new InputStreamReader(orgsResponse.getEntity().getContent()), new TypeReference<Set<GithubOrg>>() {
-            });
-        } catch (IOException e) {
-            orgsRequest.releaseConnection();
-            throw new GithubAuthenticationException(e);
-        }
-
-        Set<String> roles = new HashSet<>();
-
-        for (GithubOrg org : orgs) {
-            roles.addAll(retrieveTeamMembershipsInOrg(org, token).stream().map(team -> mapGithubTeamToNexusRole(org, team)).collect(Collectors.toList()));
-        }
-
-        return roles;
-    }
-
-    private Set<GithubTeam> retrieveTeamMembershipsInOrg(GithubOrg org, char[] token) {
-        HttpGet teamsRequest;
-        try {
-            teamsRequest = new HttpGet(new URI(org.getUrl() + configuration.getGithubTeamsInOrgPath()));
-        } catch (URISyntaxException e) {
-            LOGGER.warn("error creating uri" ,e);
-            return Collections.emptySet();
-        }
+        HttpGet teamsRequest = new HttpGet(configuration.getGithubUserTeamsUri());
         teamsRequest.addHeader(constructGithubAuthorizationHeader(token));
+        HttpResponse teamsResponse;
+
+        Set<GithubTeam> teams;
         try {
-            HttpResponse teamsResponse = client.execute(teamsRequest);
-            return mapper.readValue(new InputStreamReader(teamsResponse.getEntity().getContent()), new TypeReference<Set<GithubTeam>>() {
+            teamsResponse = client.execute(teamsRequest);
+             teams = mapper.readValue(new InputStreamReader(teamsResponse.getEntity().getContent()), new TypeReference<Set<GithubTeam>>() {
             });
         } catch (IOException e) {
             teamsRequest.releaseConnection();
-            LOGGER.warn("Failed to get teams in " + org.getUrl(),e);
-            return Collections.emptySet();
+            throw new GithubAuthenticationException(e);
         }
+
+        return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
     }
 
-    private String mapGithubTeamToNexusRole(GithubOrg org, GithubTeam team) {
-        return org.getLogin() + "/" + team.getName();
+    private String mapGithubTeamToNexusRole(GithubTeam team) {
+        return team.getOrganization().getLogin() + "/" + team.getName();
     }
 
     private BasicHeader constructGithubAuthorizationHeader(char[] token) {
