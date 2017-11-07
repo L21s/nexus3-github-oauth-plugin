@@ -54,7 +54,7 @@ public class GithubOauthConfiguration {
         return getGithubApiUrl() + GITHUB_USER_PATH;
     }
 
-    public String getGithubUserTeamsUri() { return GITHUB_USER_TEAMS_PATH; }
+    public String getGithubUserTeamsUri() { return getGithubApiUrl() + GITHUB_USER_TEAMS_PATH; }
 
     public Duration getPrincipalCacheTtl() {
         return Duration.parse(configuration.getProperty(GITHUB_PRINCIPAL_CACHE_TTL_KEY, DEFAULT_PRINCIPAL_CACHE_TTL.toString()));
