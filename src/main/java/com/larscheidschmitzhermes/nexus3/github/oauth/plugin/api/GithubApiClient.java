@@ -127,8 +127,7 @@ public class GithubApiClient {
         Set<GithubTeam> teams;
         try {
             teamsResponse = client.execute(teamsRequest);
-             teams = mapper.readValue(new InputStreamReader(teamsResponse.getEntity().getContent()), new TypeReference<Set<GithubTeam>>() {
-            });
+            teams = mapper.readValue(new InputStreamReader(teamsResponse.getEntity().getContent()), new TypeReference<Set<GithubTeam>>() {});
         } catch (IOException e) {
             teamsRequest.releaseConnection();
             throw new GithubAuthenticationException(e);
