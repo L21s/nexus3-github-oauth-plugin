@@ -73,6 +73,12 @@ github.principal.cache.ttl=PT1M
 #### 3. Restart Nexus
 Restart your Nexus instance to let it pick up your changes.
 
+## Development
+
+You can build the project with the integrated maven wrapper like so: `./mvnw clean package`
+
+Use the [`Dockerfile`](Dockerfile) to quickly spin up a nexus with the plugin already preinstalled.
+
 ## Credits
 
 The whole project is heavily influenced by the [nexus3-crowd-plugin](https://github.com/pingunaut/nexus3-crowd-plugin).
