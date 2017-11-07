@@ -21,9 +21,7 @@ public class GithubOauthConfiguration {
 
     private static final String GITHUB_USER_PATH = "/user";
 
-    private static final String GITHUB_ORGS_PATH = "/user/orgs";
-
-    private static final String GITHUB_TEAMS_IN_ORG_PATH = "/teams";
+    private static final String GITHUB_USER_TEAMS_PATH = "/user/teams";
 
     private static final Duration DEFAULT_PRINCIPAL_CACHE_TTL = Duration.ofMinutes(1);
 
@@ -52,17 +50,11 @@ public class GithubOauthConfiguration {
         return configuration.getProperty(GITHUB_API_URL_KEY, DEFAULT_GITHUB_URL);
     }
 
-    public String getGithubTeamsInOrgPath() {
-        return GITHUB_TEAMS_IN_ORG_PATH;
-    }
-
-    public String getGithubOrgsUri() {
-       return getGithubApiUrl() + GITHUB_ORGS_PATH;
-    }
-
     public String getGithubUserUri() {
         return getGithubApiUrl() + GITHUB_USER_PATH;
     }
+
+    public String getGithubUserTeamsUri() { return getGithubApiUrl() + GITHUB_USER_TEAMS_PATH; }
 
     public Duration getPrincipalCacheTtl() {
         return Duration.parse(configuration.getProperty(GITHUB_PRINCIPAL_CACHE_TTL_KEY, DEFAULT_PRINCIPAL_CACHE_TTL.toString()));

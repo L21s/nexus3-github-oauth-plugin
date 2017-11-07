@@ -49,7 +49,7 @@ The following lines will:
 - add the plugin to the `karaf` `startup.properties`.
 ```shell
 mkdir -p /opt/sonatype/nexus/system/com/larscheidschmitzhermes/ &&\
-wget -O /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/1.0.0/nexus3-github-oauth-plugin.zip &&\
+wget -O /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/1.1.0/nexus3-github-oauth-plugin.zip &&\
 unzip /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip -d /opt/sonatype/nexus/system/com/larscheidschmitzhermes/ &&\
 echo "mvn\:com.larscheidschmitzhermes/nexus3-github-oauth-plugin/1.0.0 = 200" >> /opt/sonatype/nexus/etc/karaf/startup.properties
 ```
@@ -72,6 +72,12 @@ github.principal.cache.ttl=PT1M
 
 #### 3. Restart Nexus
 Restart your Nexus instance to let it pick up your changes.
+
+## Development
+
+You can build the project with the integrated maven wrapper like so: `./mvnw clean package`
+
+Use the [`Dockerfile`](Dockerfile) to quickly spin up a nexus with the plugin already preinstalled.
 
 ## Credits
 
