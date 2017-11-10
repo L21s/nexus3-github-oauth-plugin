@@ -42,7 +42,7 @@ public class GithubOauthConfiguration {
         try {
             configuration.load(Files.newInputStream(Paths.get(".", "etc", CONFIG_FILE)));
         } catch (IOException e) {
-            LOGGER.error("Error reading github oauth properties", e);
+            LOGGER.warn("Error reading github oauth properties, falling back to default configuration", e);
         }
     }
 
