@@ -3,7 +3,7 @@
 # Nexus3 Github OAuth Plugin
 This plugin adds a Github realm to Sonatype Nexus OSS and enables you to authenticate with Github Users and authorize with Github Orgs and Teams.
 
-The plugin does not implement a full OAuth flow, instead you use your github user name + an OAuth token you generated in your account to log in to the nexus. 
+The plugin does not implement a full OAuth flow, instead you use your github user name + an OAuth token you generated in your account to log in to the nexus.
 This works through the web as well as through tools like maven, gradle etc.
 
 ## Setup
@@ -17,7 +17,7 @@ When logged in through Github, all organizations and teams the user is a member 
 
 _organization name/team name_ e.g. `dummy-org/developers`
 
-You need to manually create these roles in _Administration > Security > Roles > (+) Create Role > Nexus Role_ in order to assign them the desired priviliges. Note that anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any priviledges assigned with their teams (authorization).
+You need to manually create these roles in _Administration > Security > Roles > (+) Create Role > Nexus Role_ in order to assign them the desired priviliges. The _Role ID_ should map to the _organization name/team name_. Note that anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any priviledges assigned with their teams (authorization).
 
 ![role-mapping](role-mapping.png)
 
@@ -25,8 +25,8 @@ You need to manually create these roles in _Administration > Security > Roles > 
 
 The following steps need to be done by every developer who wants to login to your nexus with Github.
 #### 1. Generate OAuth Token
- 
-In your github account under _Settings > Personal access tokens_ generate a new OAuth token. The only scope you need is **read:org** 
+
+In your github account under _Settings > Personal access tokens_ generate a new OAuth token. The only scope you need is **read:org**
 
 #### 2. Login to nexus
 
@@ -74,10 +74,11 @@ github.principal.cache.ttl=PT1M
 Restart your Nexus instance to let it pick up your changes.
 
 ## Development
-
 You can build the project with the integrated maven wrapper like so: `./mvnw clean package`
 
-Use the [`Dockerfile`](Dockerfile) to quickly spin up a nexus with the plugin already preinstalled.
+You can also build locally using Docker by running `docker run --rm -it -v $(pwd):/data -w /data maven:3.5.2 mvn clean package`
+
+You can build a ready to run docker image using the [`Dockerfile`](Dockerfile) to quickly spin up a nexus with the plugin already preinstalled.
 
 ## Credits
 
