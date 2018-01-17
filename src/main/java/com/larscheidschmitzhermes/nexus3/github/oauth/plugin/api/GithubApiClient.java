@@ -1,6 +1,6 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -47,6 +47,11 @@ public class GithubApiClient {
         initPrincipalCache();
     }
 
+    @Inject
+    public GithubApiClient(GithubOauthConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
     @PostConstruct
     public void init() {
         client = HttpClientBuilder.create().build();
@@ -58,11 +63,6 @@ public class GithubApiClient {
         tokenToPrincipalCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(configuration.getPrincipalCacheTtl().toMillis(), TimeUnit.MILLISECONDS)
                 .build();
-    }
-
-    @Inject
-    public GithubApiClient(GithubOauthConfiguration configuration) {
-        this.configuration = configuration;
     }
 
     public GithubPrincipal authz(String login, char[] token) throws GithubAuthenticationException {
@@ -81,9 +81,7 @@ public class GithubApiClient {
     }
 
     private GithubPrincipal doAuthz(String loginName, char[] token) throws GithubAuthenticationException {
-
         GithubUser githubUser = retrieveGithubUser(loginName, token);
-
         GithubPrincipal principal = new GithubPrincipal();
 
         principal.setUsername(githubUser.getName() != null ? githubUser.getName() : loginName);
@@ -91,6 +89,7 @@ public class GithubApiClient {
 
         return principal;
     }
+
 
     private GithubUser retrieveGithubUser(String loginName, char[] token) throws GithubAuthenticationException {
         try (InputStreamReader reader = executeGet(configuration.getGithubUserUri(), token)) {
@@ -101,7 +100,7 @@ public class GithubApiClient {
                 throw new GithubAuthenticationException("Given username does not match Github Username!");
             }
 
-            if (configuration.getGithubOrg() != null && configuration.getGithubOrg().equals("")) {
+            if (configuration.getGithubOrg() != null && !configuration.getGithubOrg().equals("")) {
                 checkUserInOrg(configuration.getGithubOrg(), token);
             }
             return githubUser;
@@ -112,29 +111,34 @@ public class GithubApiClient {
     }
 
     private void checkUserInOrg(String githubOrg, char[] token) throws GithubAuthenticationException {
-        Set<GithubOrg> orgs;
-        try (InputStreamReader reader = executeGet(configuration.getGithubUserOrgsUri(), token)) {
-            orgs = mapper.readValue(reader, new TypeReference<Set<GithubOrg>>() {
-            });
-        } catch (IOException e) {
-            throw new GithubAuthenticationException(e);
-        }
-
+        Set<GithubOrg> orgs = getAndSerialize(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
         if (orgs.stream().noneMatch(org -> githubOrg.equals(org.getLogin()))) {
             throw new GithubAuthenticationException("Given username not in Organization '" + githubOrg + "'!");
         }
     }
 
     private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException {
-        Set<GithubTeam> teams;
-        try (InputStreamReader reader = executeGet(configuration.getGithubUserTeamsUri(), token)) {
-            teams = mapper.readValue(reader, new TypeReference<Set<GithubTeam>>() {
-            });
+        Set<GithubTeam> teams = getAndSerialize(configuration.getGithubUserTeamsUri(), token, GithubTeam.class);
+        return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
+    }
+
+    private String mapGithubTeamToNexusRole(GithubTeam team) {
+        return team.getOrganization().getLogin() + "/" + team.getName();
+    }
+
+    private BasicHeader constructGithubAuthorizationHeader(char[] token) {
+        return new BasicHeader("Authorization", "token " + new String(token));
+    }
+    private <T> Set<T> getAndSerialize(String uri, char[] token, Class<T> clazz) throws GithubAuthenticationException {
+        Set<T> result;
+        try (InputStreamReader reader = executeGet(uri, token)) {
+            JavaType javaType = mapper.getTypeFactory()
+                    .constructCollectionType(Set.class, clazz);
+            result = mapper.readValue(reader, javaType);
         } catch (IOException e) {
             throw new GithubAuthenticationException(e);
         }
-
-        return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
+        return result;
     }
 
     private InputStreamReader executeGet(String uri, char[] token) throws GithubAuthenticationException {
@@ -154,14 +158,6 @@ public class GithubApiClient {
             throw new GithubAuthenticationException(e);
         }
 
-    }
-
-    private String mapGithubTeamToNexusRole(GithubTeam team) {
-        return team.getOrganization().getLogin() + "/" + team.getName();
-    }
-
-    private BasicHeader constructGithubAuthorizationHeader(char[] token) {
-        return new BasicHeader("Authorization", "token " + new String(token));
     }
 
 }
