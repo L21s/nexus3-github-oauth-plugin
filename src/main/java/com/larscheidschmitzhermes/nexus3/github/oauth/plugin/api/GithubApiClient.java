@@ -1,16 +1,12 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -19,13 +15,15 @@ import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 @Named("GithubApiClient")
@@ -95,45 +93,67 @@ public class GithubApiClient {
     }
 
     private GithubUser retrieveGithubUser(String loginName, char[] token) throws GithubAuthenticationException {
-        try {
-            HttpGet userRequest = new HttpGet(configuration.getGithubUserUri());
-            userRequest.addHeader(constructGithubAuthorizationHeader(token));
-            HttpResponse userResponse = client.execute(userRequest);
+        try (InputStreamReader reader = executeGet(configuration.getGithubUserUri(), token)) {
 
-            if (userResponse.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Authentication failed, status code was {}",
-                        userResponse.getStatusLine().getStatusCode());
-                userRequest.releaseConnection();
-                throw new GithubAuthenticationException("Authentication failed.");
-            }
+            GithubUser githubUser = mapper.readValue(reader, GithubUser.class);
 
-            GithubUser githubUser = mapper.readValue(new InputStreamReader(userResponse.getEntity().getContent()), GithubUser.class);
-
-            if (!loginName.equals(githubUser.getLogin())){
+            if (!loginName.equals(githubUser.getLogin())) {
                 throw new GithubAuthenticationException("Given username does not match Github Username!");
             }
 
+            if (configuration.getGithubOrg() != null && configuration.getGithubOrg().equals("")) {
+                checkUserInOrg(configuration.getGithubOrg(), token);
+            }
             return githubUser;
+
         } catch (IOException e) {
             throw new GithubAuthenticationException(e);
         }
     }
 
-    private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException{
-        HttpGet teamsRequest = new HttpGet(configuration.getGithubUserTeamsUri());
-        teamsRequest.addHeader(constructGithubAuthorizationHeader(token));
-        HttpResponse teamsResponse;
-
-        Set<GithubTeam> teams;
-        try {
-            teamsResponse = client.execute(teamsRequest);
-            teams = mapper.readValue(new InputStreamReader(teamsResponse.getEntity().getContent()), new TypeReference<Set<GithubTeam>>() {});
+    private void checkUserInOrg(String githubOrg, char[] token) throws GithubAuthenticationException {
+        Set<GithubOrg> orgs;
+        try (InputStreamReader reader = executeGet(configuration.getGithubUserOrgsUri(), token)) {
+            orgs = mapper.readValue(reader, new TypeReference<Set<GithubOrg>>() {
+            });
         } catch (IOException e) {
-            teamsRequest.releaseConnection();
+            throw new GithubAuthenticationException(e);
+        }
+
+        if (orgs.stream().noneMatch(org -> githubOrg.equals(org.getLogin()))) {
+            throw new GithubAuthenticationException("Given username not in Organization '" + githubOrg + "'!");
+        }
+    }
+
+    private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException {
+        Set<GithubTeam> teams;
+        try (InputStreamReader reader = executeGet(configuration.getGithubUserTeamsUri(), token)) {
+            teams = mapper.readValue(reader, new TypeReference<Set<GithubTeam>>() {
+            });
+        } catch (IOException e) {
             throw new GithubAuthenticationException(e);
         }
 
         return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
+    }
+
+    private InputStreamReader executeGet(String uri, char[] token) throws GithubAuthenticationException {
+        HttpGet request = new HttpGet();
+        request.addHeader(constructGithubAuthorizationHeader(token));
+        try {
+            HttpResponse response = client.execute(request);
+            if (response.getStatusLine().getStatusCode() != 200) {
+                LOGGER.warn("Authentication failed, status code was {}",
+                        response.getStatusLine().getStatusCode());
+                request.releaseConnection();
+                throw new GithubAuthenticationException("Authentication failed.");
+            }
+            return new InputStreamReader(response.getEntity().getContent());
+        } catch (IOException e) {
+            request.releaseConnection();
+            throw new GithubAuthenticationException(e);
+        }
+
     }
 
     private String mapGithubTeamToNexusRole(GithubTeam team) {

@@ -5,7 +5,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -51,6 +53,14 @@ public class GithubApiClientTest {
         return user;
     }
 
+    private Set<GithubOrg> mockOrg(String orgname) {
+        Set orgs = new HashSet();
+        GithubOrg org = new GithubOrg();
+        org.setLogin(orgname);
+        orgs.add(org);
+        return orgs;
+    }
+
     private HttpResponse createMockResponse(Object entity) throws IOException {
         HttpResponse mockOrgRespone = Mockito.mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(mockOrgRespone.getStatusLine().getStatusCode()).thenReturn(200);
@@ -68,14 +78,17 @@ public class GithubApiClientTest {
     }
     private void mockResponsesForGithubAuthRequest(HttpClient mockClient) throws IOException {
         HttpResponse mockTeamResponse = createMockResponse(mockTeams());
+        HttpResponse mockOrgsResponse = createMockResponse(mockOrg("TEST-ORG"));
         HttpResponse mockUserResponse = createMockResponse(mockUser("Hans Wurst"));
 
         Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> {
             String uriString = ((HttpGet) invocationOnMock.getArguments()[0]).getURI().toString();
             if (uriString.equals(config.getGithubUserTeamsUri())) {
                 return mockTeamResponse;
-            } else if (uriString.equals(config.getGithubUserUri().toString())) {
+            } else if (uriString.equals(config.getGithubUserUri())) {
                 return mockUserResponse;
+            } else if (uriString.equals(config.getGithubUserOrgsUri())) {
+                return mockOrgsResponse;
             }
             return null;
         });
@@ -84,6 +97,7 @@ public class GithubApiClientTest {
     private HttpClient mockClientWithNullUsername()throws IOException{
         HttpClient mockClient = Mockito.mock(HttpClient.class);
         HttpResponse mockTeamResponse = createMockResponse(mockTeams());
+        HttpResponse mockOrgsRespone = createMockResponse(mockOrg("TEST-ORG"));
         HttpResponse mockUserResponse = createMockResponse(mockUser(null));
 
         Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> {
@@ -92,6 +106,8 @@ public class GithubApiClientTest {
                 return mockTeamResponse;
             } else if (uriString.equals(config.getGithubUserUri().toString())){
                 return mockUserResponse;
+            } else if (uriString.equals(config.getGithubUserOrgsUri())) {
+                return mockOrgsRespone;
             }
             return null;
         });
@@ -123,6 +139,7 @@ public class GithubApiClientTest {
         clientToTest.authz("demo-user", "DUMMY".toCharArray());
     }
 
+
     @Test()
     public void shouldFallbackToLoginNameIfUsernameNotSetInGit() throws Exception {
         HttpClient mockClient = mockClientWithNullUsername();
@@ -143,6 +160,15 @@ public class GithubApiClientTest {
         GithubPrincipal authorizedPrincipal = clientToTest.authz("not-the-demo-user", "DUMMY".toCharArray());
     }
 
+    @Test(expected = GithubAuthenticationException.class)
+    public void shouldNotAuthenticateIfUserNotInOrg() throws Exception {
+        HttpClient mockClient = fullyFunctionalMockClient();
+        config.setGithubOrg("OTHER-ORG");
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
+    }
+
+
     @Test
     public void cachedPrincipalReturnsIfNotExpired() throws Exception {
         HttpClient mockClient = fullyFunctionalMockClient();
@@ -153,12 +179,28 @@ public class GithubApiClientTest {
         clientToTest.authz(login, token);
 
         // We make 2 calls to Github for a single auth check
-        Mockito.verify(mockClient, Mockito.times(2)).execute(Mockito.any(HttpGet.class));
+        Mockito.verify(mockClient, Mockito.times(3)).execute(Mockito.any(HttpGet.class));
         Mockito.verifyNoMoreInteractions(mockClient);
 
         // This invocation should hit the cache and should not use the client
         clientToTest.authz(login, token);
         Mockito.verifyNoMoreInteractions(mockClient);
+    }
+
+    @Test
+    public void shouldNotCheckOrgDuringAuthentication() throws Exception {
+        HttpClient mockClient = fullyFunctionalMockClient();
+        config.setGithubOrg(null);
+
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        String login = "demo-user";
+        char[] token = "DUMMY".toCharArray();
+        clientToTest.authz(login, token);
+
+        // We make 2 calls to Github for a single auth check
+        Mockito.verify(mockClient, Mockito.times(2)).execute(Mockito.any(HttpGet.class));
+        Mockito.verifyNoMoreInteractions(mockClient);
+
     }
 
     @Test
@@ -171,7 +213,7 @@ public class GithubApiClientTest {
 
         clientToTest.authz("demo-user", token);
         // We make 2 calls to Github for a single auth check
-        Mockito.verify(mockClient, Mockito.times(2)).execute(Mockito.any(HttpGet.class));
+        Mockito.verify(mockClient, Mockito.times(3)).execute(Mockito.any(HttpGet.class));
         Mockito.verifyNoMoreInteractions(mockClient);
 
         // Wait a bit for the cache to become invalidated
@@ -183,7 +225,7 @@ public class GithubApiClientTest {
         // This should also hit Github because the cache TTL has elapsed
         clientToTest.authz("demo-user", token);
         // We make 2 calls to Github for a single auth check
-        Mockito.verify(mockClient, Mockito.times(2)).execute(Mockito.any(HttpGet.class));
+        Mockito.verify(mockClient, Mockito.times(3)).execute(Mockito.any(HttpGet.class));
         Mockito.verifyNoMoreInteractions(mockClient);
     }
 
