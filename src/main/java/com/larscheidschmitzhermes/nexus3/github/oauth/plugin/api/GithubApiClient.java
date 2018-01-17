@@ -138,7 +138,7 @@ public class GithubApiClient {
     }
 
     private InputStreamReader executeGet(String uri, char[] token) throws GithubAuthenticationException {
-        HttpGet request = new HttpGet();
+        HttpGet request = new HttpGet(uri);
         request.addHeader(constructGithubAuthorizationHeader(token));
         try {
             HttpResponse response = client.execute(request);
