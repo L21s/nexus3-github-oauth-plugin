@@ -23,6 +23,8 @@ public class GithubOauthConfiguration {
 
     private static final String GITHUB_USER_TEAMS_PATH = "/user/teams";
 
+    private static final String GITHUB_USER_ORGS_PATH = "/user/orgs";
+
     private static final Duration DEFAULT_PRINCIPAL_CACHE_TTL = Duration.ofMinutes(1);
 
     private static final String DEFAULT_GITHUB_URL = "https://api.github.com";
@@ -30,6 +32,8 @@ public class GithubOauthConfiguration {
     private static final String GITHUB_API_URL_KEY = "github.api.url";
 
     private static final String GITHUB_PRINCIPAL_CACHE_TTL_KEY = "github.principal.cache.ttl";
+
+    private static final String GITHUB_ORG = "github.org";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GithubOauthConfiguration.class);
 
@@ -55,6 +59,13 @@ public class GithubOauthConfiguration {
     }
 
     public String getGithubUserTeamsUri() { return getGithubApiUrl() + GITHUB_USER_TEAMS_PATH; }
+
+    public String getGithubUserOrgsUri() { return getGithubApiUrl() + GITHUB_USER_ORGS_PATH; }
+
+
+    public String getGithubOrg() {
+        return configuration.getProperty(GITHUB_ORG, "");
+    }
 
     public Duration getPrincipalCacheTtl() {
         return Duration.parse(configuration.getProperty(GITHUB_PRINCIPAL_CACHE_TTL_KEY, DEFAULT_PRINCIPAL_CACHE_TTL.toString()));
