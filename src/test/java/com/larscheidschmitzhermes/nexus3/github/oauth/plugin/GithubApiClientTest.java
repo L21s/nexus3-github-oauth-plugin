@@ -214,7 +214,7 @@ public class GithubApiClientTest {
         mockResponsesForGithubAuthRequest(mockClient);
         // This should also hit Github because the cache TTL has elapsed
         clientToTest.authz("demo-user", token);
-        // We make 2 calls to Github for a single auth check
+        // We make 3 calls to Github for a single auth check
         Mockito.verify(mockClient, Mockito.times(3)).execute(Mockito.any(HttpGet.class));
         Mockito.verifyNoMoreInteractions(mockClient);
     }
