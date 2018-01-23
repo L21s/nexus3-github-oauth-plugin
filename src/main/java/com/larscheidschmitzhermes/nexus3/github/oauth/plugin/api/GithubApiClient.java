@@ -92,33 +92,27 @@ public class GithubApiClient {
 
 
     private GithubUser retrieveGithubUser(String loginName, char[] token) throws GithubAuthenticationException {
-        try (InputStreamReader reader = executeGet(configuration.getGithubUserUri(), token)) {
+        GithubUser githubUser = getAndSerializeObject(configuration.getGithubUserUri(), token,GithubUser.class);
 
-            GithubUser githubUser = mapper.readValue(reader, GithubUser.class);
-
-            if (!loginName.equals(githubUser.getLogin())) {
-                throw new GithubAuthenticationException("Given username does not match Github Username!");
-            }
-
-            if (configuration.getGithubOrg() != null && !configuration.getGithubOrg().equals("")) {
-                checkUserInOrg(configuration.getGithubOrg(), token);
-            }
-            return githubUser;
-
-        } catch (IOException e) {
-            throw new GithubAuthenticationException(e);
+        if (!loginName.equals(githubUser.getLogin())) {
+            throw new GithubAuthenticationException("Given username does not match Github Username!");
         }
+
+        if (configuration.getGithubOrg() != null && !configuration.getGithubOrg().equals("")) {
+            checkUserInOrg(configuration.getGithubOrg(), token);
+        }
+        return githubUser;
     }
 
     private void checkUserInOrg(String githubOrg, char[] token) throws GithubAuthenticationException {
-        Set<GithubOrg> orgs = getAndSerialize(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
+        Set<GithubOrg> orgs = getAndSerializeCollection(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
         if (orgs.stream().noneMatch(org -> githubOrg.equals(org.getLogin()))) {
             throw new GithubAuthenticationException("Given username not in Organization '" + githubOrg + "'!");
         }
     }
 
     private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException {
-        Set<GithubTeam> teams = getAndSerialize(configuration.getGithubUserTeamsUri(), token, GithubTeam.class);
+        Set<GithubTeam> teams = getAndSerializeCollection(configuration.getGithubUserTeamsUri(), token, GithubTeam.class);
         return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
     }
 
@@ -129,7 +123,18 @@ public class GithubApiClient {
     private BasicHeader constructGithubAuthorizationHeader(char[] token) {
         return new BasicHeader("Authorization", "token " + new String(token));
     }
-    private <T> Set<T> getAndSerialize(String uri, char[] token, Class<T> clazz) throws GithubAuthenticationException {
+
+    private <T> T getAndSerializeObject(String uri, char[] token, Class<T> clazz) throws GithubAuthenticationException {
+        try (InputStreamReader reader = executeGet(uri, token)) {
+            JavaType javaType = mapper.getTypeFactory()
+                    .constructType(clazz);
+            return mapper.readValue(reader, javaType);
+        } catch (IOException e) {
+            throw new GithubAuthenticationException(e);
+        }
+    }
+
+    private <T> Set<T> getAndSerializeCollection(String uri, char[] token, Class<T> clazz) throws GithubAuthenticationException {
         Set<T> result;
         try (InputStreamReader reader = executeGet(uri, token)) {
             JavaType javaType = mapper.getTypeFactory()
