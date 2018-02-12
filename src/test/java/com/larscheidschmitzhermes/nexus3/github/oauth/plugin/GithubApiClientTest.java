@@ -113,7 +113,7 @@ public class GithubApiClientTest {
 
         MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
         MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
-        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("Hans Wurst"));
+        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
 
     }
 
@@ -127,19 +127,6 @@ public class GithubApiClientTest {
         GithubApiClient clientToTest = new GithubApiClient(mockClient, new MockGithubOauthConfiguration(Duration.ofDays(1)));
 
         clientToTest.authz("demo-user", "DUMMY".toCharArray());
-    }
-
-
-    @Test()
-    public void shouldFallbackToLoginNameIfUsernameNotSetInGit() throws Exception {
-        HttpClient mockClient = mockClientWithNullUsername();
-
-        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
-        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
-
-        MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
-        MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
-        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
     }
 
     @Test(expected = GithubAuthenticationException.class)
