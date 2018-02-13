@@ -82,13 +82,6 @@ public class GithubApiClientTest {
         Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation(invocationOnMock, mockUserResponse));
     }
 
-    private HttpClient mockClientWithNullUsername() throws IOException {
-        HttpClient mockClient = Mockito.mock(HttpClient.class);
-        HttpResponse mockUserResponse = createMockResponse(mockUser(null));
-        Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation(invocationOnMock, mockUserResponse));
-        return mockClient;
-    }
-
     private HttpResponse answerOnInvocation(InvocationOnMock invocationOnMock, HttpResponse mockUserResponse) throws IOException {
         HttpResponse mockTeamResponse = createMockResponse(mockTeams());
         HttpResponse mockOrgsResponse = createMockResponse(mockOrg("TEST-ORG"));

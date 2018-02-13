@@ -81,7 +81,6 @@ public class GithubApiClient {
     }
 
     private GithubPrincipal doAuthz(String loginName, char[] token) throws GithubAuthenticationException {
-        GithubUser githubUser = retrieveGithubUser(loginName, token);
         GithubPrincipal principal = new GithubPrincipal();
 
         principal.setUsername(loginName);
