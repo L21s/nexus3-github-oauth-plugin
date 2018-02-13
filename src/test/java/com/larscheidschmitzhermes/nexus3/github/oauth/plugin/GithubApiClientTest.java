@@ -138,7 +138,6 @@ public class GithubApiClientTest {
         clientToTest.authz("demo-user", "DUMMY".toCharArray());
     }
 
-
     @Test
     public void cachedPrincipalReturnsIfNotExpired() throws Exception {
         HttpClient mockClient = fullyFunctionalMockClient();
