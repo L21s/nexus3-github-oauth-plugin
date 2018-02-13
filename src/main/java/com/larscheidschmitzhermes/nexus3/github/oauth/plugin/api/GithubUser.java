@@ -6,7 +6,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GithubUser {
-	private List<GithubTeam> teams;
+    private List<GithubTeam> teams;
     private String name;
     private String login;
 
