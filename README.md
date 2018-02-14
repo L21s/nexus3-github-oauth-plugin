@@ -49,9 +49,9 @@ The following lines will:
 - add the plugin to the `karaf` `startup.properties`.
 ```shell
 mkdir -p /opt/sonatype/nexus/system/com/larscheidschmitzhermes/ &&\
-wget -O /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/1.2.0/nexus3-github-oauth-plugin.zip &&\
+wget -O /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/2.0.0/nexus3-github-oauth-plugin.zip &&\
 unzip /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip -d /opt/sonatype/nexus/system/com/larscheidschmitzhermes/ &&\
-echo "mvn\:com.larscheidschmitzhermes/nexus3-github-oauth-plugin/1.2.0 = 200" >> /opt/sonatype/nexus/etc/karaf/startup.properties
+echo "mvn\:com.larscheidschmitzhermes/nexus3-github-oauth-plugin/2.0.0 = 200" >> /opt/sonatype/nexus/etc/karaf/startup.properties
 ```
 
 #### 2. Create configuration
