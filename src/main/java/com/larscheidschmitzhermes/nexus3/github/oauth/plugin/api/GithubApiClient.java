@@ -84,7 +84,7 @@ public class GithubApiClient {
         GithubUser githubUser = retrieveGithubUser(loginName, token);
         GithubPrincipal principal = new GithubPrincipal();
 
-        principal.setUsername(githubUser.getName() != null ? githubUser.getName() : loginName);
+        principal.setUsername(githubUser.getLogin());
         principal.setRoles(generateRolesFromGithubOrgMemberships(token));
 
         return principal;

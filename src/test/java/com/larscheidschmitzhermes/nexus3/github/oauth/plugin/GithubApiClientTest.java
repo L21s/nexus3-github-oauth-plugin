@@ -82,13 +82,6 @@ public class GithubApiClientTest {
         Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation(invocationOnMock, mockUserResponse));
     }
 
-    private HttpClient mockClientWithNullUsername() throws IOException {
-        HttpClient mockClient = Mockito.mock(HttpClient.class);
-        HttpResponse mockUserResponse = createMockResponse(mockUser(null));
-        Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation(invocationOnMock, mockUserResponse));
-        return mockClient;
-    }
-
     private HttpResponse answerOnInvocation(InvocationOnMock invocationOnMock, HttpResponse mockUserResponse) throws IOException {
         HttpResponse mockTeamResponse = createMockResponse(mockTeams());
         HttpResponse mockOrgsResponse = createMockResponse(mockOrg("TEST-ORG"));
@@ -113,7 +106,7 @@ public class GithubApiClientTest {
 
         MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
         MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
-        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("Hans Wurst"));
+        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
 
     }
 
@@ -127,19 +120,6 @@ public class GithubApiClientTest {
         GithubApiClient clientToTest = new GithubApiClient(mockClient, new MockGithubOauthConfiguration(Duration.ofDays(1)));
 
         clientToTest.authz("demo-user", "DUMMY".toCharArray());
-    }
-
-
-    @Test()
-    public void shouldFallbackToLoginNameIfUsernameNotSetInGit() throws Exception {
-        HttpClient mockClient = mockClientWithNullUsername();
-
-        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
-        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
-
-        MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
-        MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
-        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
     }
 
     @Test(expected = GithubAuthenticationException.class)
@@ -157,7 +137,6 @@ public class GithubApiClientTest {
         GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
         clientToTest.authz("demo-user", "DUMMY".toCharArray());
     }
-
 
     @Test
     public void cachedPrincipalReturnsIfNotExpired() throws Exception {
