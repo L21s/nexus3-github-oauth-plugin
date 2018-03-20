@@ -1,8 +1,9 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin;
 
+import java.io.Serializable;
 import java.util.Set;
 
-public class GithubPrincipal {
+public class GithubPrincipal implements Serializable {
     private String username;
     private char[] oauthToken;
     private Set<String> roles;
