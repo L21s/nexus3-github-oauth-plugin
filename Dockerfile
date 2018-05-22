@@ -2,10 +2,13 @@ FROM maven:3.5.2 as builder
 MAINTAINER matt.brewster@base2s.com
 COPY . /build
 WORKDIR /build
-RUN mvn clean package
+RUN mvn versions:set -DnewVersion=1.1.0; \
+    mvn clean package
 
-FROM sonatype/nexus3:3.7.1
+FROM sonatype/nexus3:3.11.0
+
 USER root
+
 RUN mkdir -p /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin/1.1.0/
 COPY --from=builder /build/target/nexus3-github-oauth-plugin-1.1.0.jar /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin/1.1.0/
 COPY --from=builder /build/target/feature/feature.xml /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin/1.1.0/nexus3-github-oauth-plugin-1.1.0-features.xml
