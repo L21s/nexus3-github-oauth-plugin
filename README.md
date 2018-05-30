@@ -81,6 +81,19 @@ You can also build locally using Docker by running `docker run --rm -it -v $(pwd
 
 You can build a ready to run docker image using the [`Dockerfile`](Dockerfile) to quickly spin up a nexus with the plugin already preinstalled.
 
+
+## Using Makefile
+
+You can use `Makefile` to automate most routine:
+
+|Routine |Command |
+|--- |--- |
+|Build Plugin | `make build` |
+|Build Plugin and Package Docker Image (default name: nexus) | `make package` |
+|Build Plugin and Package Docker Image (custom name: my/nexus) | `IMAGE=my/nexus make package` |
+
+Please make sure `docker`, `make` and `xmllint` utils are installed locally
+
 ## Credits
 
 The whole project is heavily influenced by the [nexus3-crowd-plugin](https://github.com/pingunaut/nexus3-crowd-plugin).
