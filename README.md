@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/larscheid-schmitzhermes/nexus3-github-oauth-plugin.svg?branch=master)](https://travis-ci.org/larscheid-schmitzhermes/nexus3-github-oauth-plugin)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7de60ad600b743e0b2744ee86691e458)](https://www.codacy.com/app/jan_7/nexus3-github-oauth-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=larscheid-schmitzhermes/nexus3-github-oauth-plugin&amp;utm_campaign=Badge_Grade)
+![Total Downloads Badge](https://img.shields.io/github/downloads/larscheid-schmitzhermes/nexus3-github-oauth-plugin/total.svg)
 # Nexus3 Github OAuth Plugin
 This plugin adds a Github realm to Sonatype Nexus OSS and enables you to authenticate with Github Users and authorize with Github Orgs and Teams.
 
