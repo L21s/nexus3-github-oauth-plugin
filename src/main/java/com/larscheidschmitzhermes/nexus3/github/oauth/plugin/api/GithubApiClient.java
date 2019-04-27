@@ -1,12 +1,15 @@
 package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -15,15 +18,13 @@ import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
 
 @Singleton
 @Named("GithubApiClient")
@@ -37,8 +38,7 @@ public class GithubApiClient {
     private Cache<String, GithubPrincipal> tokenToPrincipalCache;
 
     public GithubApiClient() {
-        //no args constructor is needed
-        init()
+        init();
     }
 
     public GithubApiClient(HttpClient client, GithubOauthConfiguration configuration) {
