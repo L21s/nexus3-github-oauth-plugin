@@ -38,6 +38,7 @@ public class GithubApiClient {
 
     public GithubApiClient() {
         //no args constructor is needed
+        init()
     }
 
     public GithubApiClient(HttpClient client, GithubOauthConfiguration configuration) {
@@ -50,9 +51,9 @@ public class GithubApiClient {
     @Inject
     public GithubApiClient(GithubOauthConfiguration configuration) {
         this.configuration = configuration;
+        init();
     }
 
-    @PostConstruct
     public void init() {
         client = HttpClientBuilder.create().build();
         mapper = new ObjectMapper();

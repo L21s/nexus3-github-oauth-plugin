@@ -39,8 +39,7 @@ public class GithubOauthConfiguration {
 
     private Properties configuration;
 
-    @PostConstruct
-    public void init() {
+    public GithubOauthConfiguration() {
         configuration = new Properties();
 
         try {
