@@ -1,4 +1,4 @@
-FROM maven:3 as builder
+FROM maven:3-jdk-8 as builder
 MAINTAINER matt.brewster@base2s.com
 COPY . /build
 WORKDIR /build
