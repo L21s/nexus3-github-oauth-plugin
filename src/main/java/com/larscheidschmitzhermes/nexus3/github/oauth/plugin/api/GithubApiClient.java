@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
@@ -55,7 +56,15 @@ public class GithubApiClient {
     }
 
     public void init() {
-        client = HttpClientBuilder.create().build();
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(configuration.getRequestConnectTimeout())
+                .setConnectionRequestTimeout(configuration.getRequestConnectionRequestTimeout())
+                .setSocketTimeout(configuration.getRequestSocketTimeout())
+                .build();
+        client = HttpClientBuilder
+                .create()
+                .setDefaultRequestConfig(config)
+                .build();
         mapper = new ObjectMapper();
         initPrincipalCache();
     }
