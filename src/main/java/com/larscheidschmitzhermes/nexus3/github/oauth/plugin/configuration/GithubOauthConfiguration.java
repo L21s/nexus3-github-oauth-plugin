@@ -35,6 +35,18 @@ public class GithubOauthConfiguration {
 
     private static final String GITHUB_ORG = "github.org";
 
+    private static final String REQUEST_CONNECT_TIMEOUT = "request.timeout.connect";
+
+    private static final int DEFAULT_REQUEST_CONNECT_TIMEOUT = -1;
+
+    private static final String REQUEST_CONNECTION_REQUEST_TIMEOUT = "request.timeout.connection-request";
+
+    private static final int DEFAULT_REQUEST_CONNECTION_REQUEST_TIMEOUT = -1;
+
+    private static final String REQUEST_SOCKET_TIMEOUT = "request.timeout.socket";
+
+    private static final int DEFAULT_REQUEST_SOCKET_TIMEOUT = -1;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GithubOauthConfiguration.class);
 
     private Properties configuration;
@@ -68,5 +80,17 @@ public class GithubOauthConfiguration {
 
     public Duration getPrincipalCacheTtl() {
         return Duration.parse(configuration.getProperty(GITHUB_PRINCIPAL_CACHE_TTL_KEY, DEFAULT_PRINCIPAL_CACHE_TTL.toString()));
+    }
+
+    public int getRequestConnectTimeout() {
+        return Integer.parseInt(configuration.getProperty(REQUEST_CONNECT_TIMEOUT, String.valueOf(DEFAULT_REQUEST_CONNECT_TIMEOUT)));
+    }
+
+    public Integer getRequestConnectionRequestTimeout() {
+        return Integer.parseInt(configuration.getProperty(REQUEST_CONNECTION_REQUEST_TIMEOUT, String.valueOf(DEFAULT_REQUEST_CONNECTION_REQUEST_TIMEOUT)));
+    }
+
+    public Integer getRequestSocketTimeout() {
+        return Integer.parseInt(configuration.getProperty(REQUEST_SOCKET_TIMEOUT, String.valueOf(DEFAULT_REQUEST_SOCKET_TIMEOUT)));
     }
 }
