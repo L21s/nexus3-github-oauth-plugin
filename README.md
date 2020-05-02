@@ -43,13 +43,10 @@ For the following commands we assume your nexus installation resides in `/opt/so
 
 #### 1. Download and install
 
-The following lines will:
-- create a directory in the `nexus` / `kafka` maven repository
-- download the latest release from github
-- unzip the releae to the deploy directory
+Download the latest release from github and palce it in the `nexus/deploy` folder, e.g., like so:
+
 ```shell
-wget -O /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/3.0.0/nexus3-github-oauth-plugin.zip &&\
-unzip /opt/sonatype/nexus/system/com/larscheidschmitzhermes/nexus3-github-oauth-plugin.zip -d /opt/sonatype/nexus/deploy/
+wget -O /opt/sonatype/nexus/deploy/nexus3-github-oauth-plugin.kar https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/3.0.0/nexus3-github-oauth-plugin.kar
 ```
 
 #### 2. Create configuration
