@@ -198,4 +198,11 @@ public class GithubApiClientTest {
         Mockito.verifyNoMoreInteractions(mockClient);
     }
 
+    @Test
+    public void shouldHaveBothOrgs() throws Exception {
+        HttpClient mockClient = fullyFunctionalMockClient();
+        config.setGithubOrg("TEST-ORG,TEST-ORG2");
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal principal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
+    }
 }
