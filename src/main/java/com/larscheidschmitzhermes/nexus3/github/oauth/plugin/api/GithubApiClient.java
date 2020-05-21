@@ -116,10 +116,10 @@ public class GithubApiClient {
     }
 
     private void checkUserInOrg(String githubOrg, char[] token) throws GithubAuthenticationException {
-        Set<GithubOrg> orgs = getAndSerializeCollection(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
-        String[] githubOrgs = githubOrg.split(",");
+        Set<GithubOrg> orgsInToken = getAndSerializeCollection(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
+        String[] allowedOrgs = githubOrg.split(",");
 
-        if (orgs.stream().noneMatch(org -> Arrays.asList(githubOrgs).contains(org.getLogin()))) {
+        if (orgsInToken.stream().noneMatch(org -> Arrays.asList(allowedOrgs).contains(org.getLogin()))) {
             throw new GithubAuthenticationException("Given username not in Organization '" + githubOrg + "'!");
         }
     }
