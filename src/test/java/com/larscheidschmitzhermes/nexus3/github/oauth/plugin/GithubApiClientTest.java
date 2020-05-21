@@ -199,7 +199,7 @@ public class GithubApiClientTest {
     }
 
     @Test
-    public void shouldHaveBothOrgs() throws Exception {
+    public void shouldAcceptOrgAnywhereInList() throws Exception {
         HttpClient mockClient = fullyFunctionalMockClient();
         config.setGithubOrg("TEST-ORG,TEST-ORG2");
         GithubApiClient clientToTest = new GithubApiClient(mockClient, config);

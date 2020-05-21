@@ -120,7 +120,7 @@ public class GithubApiClient {
         String[] allowedOrgs = githubOrg.split(",");
 
         if (orgsInToken.stream().noneMatch(org -> Arrays.asList(allowedOrgs).contains(org.getLogin()))) {
-            throw new GithubAuthenticationException("Given username not in Organization '" + githubOrg + "'!");
+            throw new GithubAuthenticationException("Given username is not in the Github Organization '" + githubOrg + "' or the Organization is not in the allowed list!");
         }
     }
 
