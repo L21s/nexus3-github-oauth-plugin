@@ -198,4 +198,18 @@ public class GithubApiClientTest {
         Mockito.verifyNoMoreInteractions(mockClient);
     }
 
+    @Test
+    public void shouldAcceptOrgAnywhereInList() throws Exception {
+        HttpClient mockClient = fullyFunctionalMockClient();
+        config.setGithubOrg("TEST-ORG,TEST-ORG2");
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
+        MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
+
+        HttpClient mockClient2 = fullyFunctionalMockClient();
+        config.setGithubOrg("TEST-ORG2,TEST-ORG");
+        GithubApiClient clientToTest2 = new GithubApiClient(mockClient2, config);
+        GithubPrincipal authorizedPrincipal2 = clientToTest2.authz("demo-user", "DUMMY".toCharArray());
+        MatcherAssert.assertThat(authorizedPrincipal2.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
+    }
 }

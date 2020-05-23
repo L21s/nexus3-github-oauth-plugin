@@ -58,7 +58,7 @@ Within the file you can configure the following properties:
 |---             |---                                      |---    |
 |`github.api.url`|URL of the Github API to operate against.|`https://api.github.com`|
 |`github.principal.cache.ttl`|[Java Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-) for how long a given Access will be cached for. This is a tradeoff of how quickly access can be revoked and how quickly a Github user's rate limit will be reached for the Github User API. _Note:_ Github Enterprise does not have a rate limit!|`PT1M` (1 Minute)|
-|`github.org`|The Organization the user should be a member of. If this is not set anyone with a Github account is allowed to login.|----|
+|`github.org`|The comma-separated list of Organizations the user should be a member of. If this is not set, anyone with a Github account is allowed to log in.|----|
 |`request.timeout.connection-request`|The timeout in milliseconds used when requesting a connection from the connection manager. A timeout value of zero is interpreted as an infinite timeout. A negative value is interpreted as undefined (system default).|`-1`|
 |`request.timeout.connect`|The timeout in milliseconds until a connection is established. A timeout value of zero is interpreted as an infinite timeout. A negative value is interpreted as undefined (system default).|`-1`|
 |`request.timeout.socket`|The socket timeout (`SO_TIMEOUT`) in milliseconds, which is the timeout for waiting for data  or, put differently, a maximum period inactivity between two consecutive data packets). A timeout value of zero is interpreted as an infinite timeout. A negative value is interpreted as undefined (system default).|`-1`|

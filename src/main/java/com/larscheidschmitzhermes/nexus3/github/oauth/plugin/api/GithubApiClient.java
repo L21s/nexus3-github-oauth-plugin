@@ -2,6 +2,7 @@ package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -115,9 +116,11 @@ public class GithubApiClient {
     }
 
     private void checkUserInOrg(String githubOrg, char[] token) throws GithubAuthenticationException {
-        Set<GithubOrg> orgs = getAndSerializeCollection(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
-        if (orgs.stream().noneMatch(org -> githubOrg.equals(org.getLogin()))) {
-            throw new GithubAuthenticationException("Given username not in Organization '" + githubOrg + "'!");
+        Set<GithubOrg> orgsInToken = getAndSerializeCollection(configuration.getGithubUserOrgsUri(), token, GithubOrg.class);
+        String[] allowedOrgs = githubOrg.split(",");
+
+        if (orgsInToken.stream().noneMatch(org -> Arrays.asList(allowedOrgs).contains(org.getLogin()))) {
+            throw new GithubAuthenticationException("Given username is not in the Github Organization '" + githubOrg + "' or the Organization is not in the allowed list!");
         }
     }
 
