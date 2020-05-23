@@ -76,7 +76,7 @@ public class GithubOauthAuthenticatingRealm extends AuthorizingRealm {
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
 		GithubPrincipal user = (GithubPrincipal) principals.getPrimaryPrincipal();
-		LOGGER.info("doGetAuthorizationInfo for user {} with roles {}", user.getUsername(), user.getRoles().stream().collect(Collectors.joining()));
+		LOGGER.info("doGetAuthorizationInfo for user {} with roles {}", user.getUsername(), user.getRoles().stream().collect(Collectors.joining(", ")));
 		return new SimpleAuthorizationInfo(user.getRoles());
 	}
 

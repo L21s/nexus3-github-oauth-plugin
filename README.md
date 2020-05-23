@@ -18,7 +18,7 @@ When logged in through Github, all organizations and teams the user is a member 
 
 _organization name/team name_ e.g. `dummy-org/developers`
 
-You need to manually create these roles in _Administration > Security > Roles > (+) Create Role > Nexus Role_ in order to assign them the desired priviliges. The _Role ID_ should map to the _organization name/team name_. Note that by default anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any priviledges assigned with their teams (authorization) - see the config property `github.org` if you want to change that behaviour.
+You need to manually create these roles in _Administration > Security > Roles > (+) Create Role > Nexus Role_ in order to assign them the desired privileges. The _Role ID_ should map to the _organization name/team name_. Note that by default anybody is allowed to login (authenticate) with a valid Github Token from your Github instance, but he/she won't have any privileges assigned with their teams (authorization) - see the config property `github.org` if you want to change that behaviour.
 
 ![role-mapping](role-mapping.png)
 
@@ -43,7 +43,7 @@ For the following commands we assume your nexus installation resides in `/opt/so
 
 #### 1. Download and install
 
-Download the latest release from github and palce it in the `nexus/deploy` folder, e.g., like so:
+Download the latest release from github and place it in the `nexus/deploy` folder, e.g., like so:
 
 ```shell
 wget -O /opt/sonatype/nexus/deploy/nexus3-github-oauth-plugin.kar https://github.com/larscheid-schmitzhermes/nexus3-github-oauth-plugin/releases/download/3.0.0/nexus3-github-oauth-plugin.kar
