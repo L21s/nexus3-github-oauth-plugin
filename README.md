@@ -34,6 +34,18 @@ In your github account under _Settings > Personal access tokens_ generate a new 
 When logging in to nexus, use your github user name as the username and the oauth token you just generated as the password.
 This also works through maven, gradle etc.
 
+Example Maven settings.xml fragment:
+
+```xml
+<servers>
+  <server>
+    <id>Id that matches the id element of the repository/mirror that Maven tries to connect to</id>
+    <username>Your Github user name</username>
+    <password>Your Github token</password>
+  </server>
+</servers>
+```
+
 ## Installation
 
 #### 0. Prerequisites
