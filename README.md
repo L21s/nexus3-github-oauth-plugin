@@ -45,6 +45,7 @@ Example Maven settings.xml fragment:
   </server>
 </servers>
 ```
+For configuring npm see [npm Registry - Authentication Using Basic Auth](https://help.sonatype.com/repomanager3/formats/npm-registry#npmRegistry-AuthenticationUsingBasicAuth).
 
 ## Installation
 
