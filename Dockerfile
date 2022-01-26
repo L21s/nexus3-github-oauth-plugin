@@ -4,7 +4,10 @@ COPY . /build
 WORKDIR /build
 RUN mvn clean package
 
-FROM sonatype/nexus3:3.16.1
+# patch log4j vulnerability
+ENV LOG4J_FORMAT_MSG_NO_LOOKUPS="true"
+
+FROM sonatype/nexus3:latest
 USER root
 COPY --from=builder /build/target/nexus3-github-oauth-plugin-*.kar /opt/sonatype/nexus/deploy
 USER nexus
