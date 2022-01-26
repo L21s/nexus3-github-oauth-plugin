@@ -9,6 +9,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  schedule:
+    - cron: '0 0 * * 0'  # github does not support @weekly notation
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -25,12 +27,33 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Fetch Maven cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-jdk8-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-jdk8-
+
+      - name: Generate settings.xml for Maven Builds
+        uses: whelk-io/maven-settings-xml-action@v14
+        with:
+          servers: '[{ "id": "nexus.qa1.deep6.ai", "username": "nexus-rw", "password": "${{ secrets.NEXUS_RW_PASSWORD }}" }]'
+          mirrors: '[{ "id": "nexus.qa1.deep6.ai", "mirrorOf": "!release.artifacts.deep6.ai,*", "url": "https://nexus.qa1.deep6.ai/repository/maven-aggregator/" }]'
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+
+      # Runs a single command using the runners shell
+      - name: Docker build
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          docker build . -t 598436819329.dkr.ecr.us-east-1.amazonaws.com/central/nexus3-oauth
+          docker push 598436819329.dkr.ecr.us-east-1.amazonaws.com/central/nexus3-oauth
