@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-plugins</artifactId>
-        <version>3.2.1-01</version>
+        <version>3.43.0-01</version>
     </parent>
 
     <groupId>com.larscheidschmitzhermes</groupId>
@@ -37,8 +37,20 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.9.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.sonatype.goodies</groupId>
             <artifactId>goodies-testsupport</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.nexus.testsuite</groupId>
+            <artifactId>nexus-repository-testsupport</artifactId>
+            <version>3.43.0-01</version>
             <scope>test</scope>
         </dependency>
         <dependency>
