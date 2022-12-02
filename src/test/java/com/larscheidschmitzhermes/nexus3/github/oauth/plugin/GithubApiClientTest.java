@@ -16,16 +16,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GithubApiClientTest {
@@ -46,6 +47,21 @@ public class GithubApiClientTest {
         return teams;
     }
 
+    private List<GithubTeam> mockTooManyTeams() {
+        List<GithubTeam> teams = new ArrayList<>();
+
+        GithubOrg org = new GithubOrg();
+        org.setLogin("TEST-ORG");
+        for (int i = 0; i < 100; i++) {
+            GithubTeam team = new GithubTeam();
+            team.setOrganization(org);
+            team.setName("admin_team_"+i);
+            teams.add(team);
+        }
+
+        return teams;
+    }
+
     private GithubUser mockUser(String username) {
         GithubUser user = new GithubUser();
         user.setName(username);
@@ -62,24 +78,35 @@ public class GithubApiClientTest {
     }
 
     private HttpResponse createMockResponse(Object entity) throws IOException {
-        HttpResponse mockOrgRespone = Mockito.mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
-        Mockito.when(mockOrgRespone.getStatusLine().getStatusCode()).thenReturn(200);
+        HttpResponse mockOrgResponse = mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
+        when(mockOrgResponse.getStatusLine().getStatusCode()).thenReturn(200);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         mapper.writeValue(baos, entity);
         byte[] data = baos.toByteArray();
-        Mockito.when(mockOrgRespone.getEntity().getContent()).thenReturn(new ByteArrayInputStream(data));
-        return mockOrgRespone;
+        when(mockOrgResponse.getEntity().getContent()).thenReturn(new ByteArrayInputStream(data));
+        return mockOrgResponse;
     }
 
     private HttpClient fullyFunctionalMockClient() throws IOException {
-        HttpClient mockClient = Mockito.mock(HttpClient.class);
+        HttpClient mockClient = mock(HttpClient.class);
         mockResponsesForGithubAuthRequest(mockClient);
+        return mockClient;
+    }
+
+    private HttpClient fullyFunctionalMockClient2ManyTeams() throws IOException {
+        HttpClient mockClient = mock(HttpClient.class);
+        mockResponsesForGithubAuthRequest2Many(mockClient);
         return mockClient;
     }
 
     private void mockResponsesForGithubAuthRequest(HttpClient mockClient) throws IOException {
         HttpResponse mockUserResponse = createMockResponse(mockUser("Hans Wurst"));
-        Mockito.when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation(invocationOnMock, mockUserResponse));
+        when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation(invocationOnMock, mockUserResponse));
+    }
+
+    private void mockResponsesForGithubAuthRequest2Many(HttpClient mockClient) throws IOException {
+        HttpResponse mockUserResponse = createMockResponse(mockUser("Hans Wurst"));
+        when(mockClient.execute(Mockito.any())).thenAnswer(invocationOnMock -> answerOnInvocation2Many(invocationOnMock, mockUserResponse));
     }
 
     private HttpResponse answerOnInvocation(InvocationOnMock invocationOnMock, HttpResponse mockUserResponse) throws IOException {
@@ -97,6 +124,38 @@ public class GithubApiClientTest {
         return null;
     }
 
+    private HttpResponse answerOnInvocation2Many(InvocationOnMock invocationOnMock, HttpResponse mockUserResponse) throws IOException {
+        HttpResponse mockTeamResponse = createMockResponse(mockTooManyTeams());
+        HttpResponse mockOrgsResponse = createMockResponse(mockOrg("TEST-ORG"));
+
+        String uriString = ((HttpGet) invocationOnMock.getArguments()[0]).getURI().toString();
+        if (uriString.equals(config.getGithubUserTeamsUri())) {
+            return mockTeamResponse;
+        } else if (uriString.equals(config.getGithubUserUri())) {
+            return mockUserResponse;
+        } else if (uriString.equals(config.getGithubUserOrgsUri())) {
+            return mockOrgsResponse;
+        }
+        return null;
+    }
+
+    @Test
+    public void shouldWarnIfTooManyTeams() throws Exception {
+        mockStatic(LoggerFactory.class);
+        Logger logger = mock(Logger.class);
+        when(LoggerFactory.getLogger(any(Class.class))).thenReturn(logger);
+
+        HttpClient mockClient = fullyFunctionalMockClient2ManyTeams();
+
+        GithubApiClient clientToTest = new GithubApiClient(mockClient, config);
+        GithubPrincipal authorizedPrincipal = clientToTest.authz("demo-user", "DUMMY".toCharArray());
+
+        verify(logger).warn("Fetching only the first 100 teams for user '{}'","demo-user");
+
+        MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(100));
+        MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
+    }
+
     @Test
     public void shouldDoAuthzIfRequestStatusIs200() throws Exception {
         HttpClient mockClient = fullyFunctionalMockClient();
@@ -107,15 +166,14 @@ public class GithubApiClientTest {
         MatcherAssert.assertThat(authorizedPrincipal.getRoles().size(), Is.is(1));
         MatcherAssert.assertThat(authorizedPrincipal.getRoles().iterator().next(), Is.is("TEST-ORG/admin"));
         MatcherAssert.assertThat(authorizedPrincipal.getUsername(), Is.is("demo-user"));
-
     }
 
     @Test(expected = GithubAuthenticationException.class)
     public void shouldNotAuthenticateIfRequestIsNot200() throws Exception {
-        HttpClient mockClient = Mockito.mock(HttpClient.class);
-        HttpResponse mockRespone = Mockito.mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
-        Mockito.when(mockRespone.getStatusLine().getStatusCode()).thenReturn(403);
-        Mockito.when(mockClient.execute(Mockito.any())).thenReturn(mockRespone);
+        HttpClient mockClient = mock(HttpClient.class);
+        HttpResponse mockResponse = mock(HttpResponse.class, Mockito.RETURNS_DEEP_STUBS);
+        when(mockResponse.getStatusLine().getStatusCode()).thenReturn(403);
+        when(mockClient.execute(Mockito.any())).thenReturn(mockResponse);
 
         GithubApiClient clientToTest = new GithubApiClient(mockClient, new MockGithubOauthConfiguration(Duration.ofDays(1)));
 
@@ -169,7 +227,6 @@ public class GithubApiClientTest {
         // We make 2 calls to Github for a single auth check
         Mockito.verify(mockClient, Mockito.times(2)).execute(Mockito.any(HttpGet.class));
         Mockito.verifyNoMoreInteractions(mockClient);
-
     }
 
     @Test

@@ -96,7 +96,7 @@ public class GithubApiClient {
         GithubPrincipal principal = new GithubPrincipal();
 
         principal.setUsername(githubUser.getLogin());
-        principal.setRoles(generateRolesFromGithubOrgMemberships(token));
+        principal.setRoles(generateRolesFromGithubOrgMemberships(token, loginName));
 
         return principal;
     }
@@ -124,8 +124,11 @@ public class GithubApiClient {
         }
     }
 
-    private Set<String> generateRolesFromGithubOrgMemberships(char[] token) throws GithubAuthenticationException {
+    private Set<String> generateRolesFromGithubOrgMemberships(char[] token, String loginName) throws GithubAuthenticationException {
         Set<GithubTeam> teams = getAndSerializeCollection(configuration.getGithubUserTeamsUri(), token, GithubTeam.class);
+        if (teams.size() >= 100) {
+            LOGGER.warn("Fetching only the first 100 teams for user '{}'", loginName);
+        }
         return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
     }
 

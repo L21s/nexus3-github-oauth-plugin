@@ -69,7 +69,7 @@ public class GithubOauthConfiguration {
         return getGithubApiUrl() + GITHUB_USER_PATH;
     }
 
-    public String getGithubUserTeamsUri() { return getGithubApiUrl() + GITHUB_USER_TEAMS_PATH; }
+    public String getGithubUserTeamsUri() { return getGithubApiUrl() + GITHUB_USER_TEAMS_PATH + "?per_page=100"; }
 
     public String getGithubUserOrgsUri() { return getGithubApiUrl() + GITHUB_USER_ORGS_PATH; }
 
