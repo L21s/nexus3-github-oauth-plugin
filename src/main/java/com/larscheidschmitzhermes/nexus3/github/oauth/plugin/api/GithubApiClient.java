@@ -173,7 +173,7 @@ public class GithubApiClient {
                 request.releaseConnection();
                 throw new GithubAuthenticationException("Authentication failed.");
             }
-            return new InputStreamReader(response.getEntity().getContent());
+            return new InputStreamReader(response.getEntity().getContent(), "UTF-8");
         } catch (IOException e) {
             request.releaseConnection();
             throw new GithubAuthenticationException(e);
