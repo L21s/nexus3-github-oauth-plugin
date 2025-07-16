@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.sonatype.nexus.testsuite</groupId>
             <artifactId>nexus-repository-testsupport</artifactId>
-            <version>3.43.0-01</version>
+            <version>2.3.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
